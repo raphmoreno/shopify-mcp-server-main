@@ -1,5 +1,9 @@
 # Shopify MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@rezapex/shopify-mcp-server-main)](https://smithery.ai/server/@rezapex/shopify-mcp-server-main)
+
+MCP Server for Shopify API, enabling interaction with store data through GraphQL API. This server provides tools for managing products, customers, orders, and more.
+
 # ![Shopify MCP Server](https://via.placeholder.com/728x90.png)
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com/build-status)
