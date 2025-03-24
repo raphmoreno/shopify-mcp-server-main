@@ -1,6 +1,6 @@
 # Shopify MCP Server
 
-![Shopify MCP Server](https://via.placeholder.com/728x90.png)
+# ![Shopify MCP Server](https://via.placeholder.com/728x90.png)
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com/build-status)
 [![npm version](https://img.shields.io/badge/npm-1.0.1-blue)](https://www.npmjs.com/package/shopify-mcp-server)
@@ -8,7 +8,6 @@
 
 MCP Server for [Shopify Admin API](https://shopify.dev/docs/api/admin-graphql), enabling interaction with store data through GraphQL API. This server provides tools for managing products, customers, orders, and more.
 
-<a href="https://glama.ai/mcp/servers/rezapex"><img width="380" height="200" src="https://glama.ai/mcp/servers/rezapex/badge" alt="Shopify Server MCP server" /></a>
 
 ## Table of Contents
 
