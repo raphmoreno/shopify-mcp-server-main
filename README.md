@@ -1,219 +1,134 @@
-# Shopify MCP Server
+<div align="center">
+  <h1>Shopify MCP Server</h1>
+  <p><strong>GraphQL-powered integration with Shopify Admin API</strong></p>
+  <p>
+    <a href="https://example.com/build-status"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status"></a>
+    <a href="https://www.npmjs.com/package/shopify-mcp-server"><img src="https://img.shields.io/badge/npm-1.0.1-blue" alt="npm version"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+    <a href="https://discord.gg/kR2DFxV8"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord&logoColor=white" alt="Discord"></a>
+  </p>
+</div>
 
-[![smithery badge](https://smithery.ai/badge/@rezapex/shopify-mcp-server-main)](https://smithery.ai/server/@rezapex/shopify-mcp-server-main)
+## 🚀 Overview
 
-MCP Server for Shopify API, enabling interaction with store data through GraphQL API. This server provides tools for managing products, customers, orders, and more.
+Shopify MCP Server provides a powerful bridge between your applications and the Shopify ecosystem through the Model Context Protocol. Easily manage products, customers, orders, and more with simple API calls to Shopify's Admin API.
 
-# ![Shopify MCP Server](https://via.placeholder.com/728x90.png)
+## 📋 Table of Contents
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com/build-status)
-[![npm version](https://img.shields.io/badge/npm-1.0.1-blue)](https://www.npmjs.com/package/shopify-mcp-server)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+- [Installation](#-installation)
+- [Features](#-features)
+- [Available Tools](#-available-tools)
+- [Getting Started](#-getting-started)
+- [Use Cases](#-use-cases)
+- [Setup Guide](#-setup-guide)
+- [Development](#-development)
+- [Community](#-community)
 
-MCP Server for [Shopify Admin API](https://shopify.dev/docs/api/admin-graphql), enabling interaction with store data through GraphQL API. This server provides tools for managing products, customers, orders, and more.
+## 📥 Installation
 
+Choose your preferred installation method:
 
-## Table of Contents
+| Method | Instructions |
+|--------|--------------|
+| **Smithery** | [![smithery badge](https://smithery.ai/badge/@rezapex/shopify-mcp-server-main)](https://smithery.ai/server/@rezapex/shopify-mcp-server-main) |
+| **Glama.ai** | [![glama.ai badge](https://img.shields.io/badge/glama.ai-MCP%20Server-blue)](https://glama.ai/mcp/servers/@rezapex/shopify-mcp-server-main) |
+| **NPM** | `npm install shopify-mcp-server` |
 
-- [Features](#features)
-- [Tools](#tools)
-- [Getting Started](#getting-started)
-- [Use Cases](#use-cases)
-- [Testimonials](#testimonials)
-- [Contributors](#contributors)
-- [Setup](#setup)
-- [Development](#development)
-- [Dependencies](#dependencies)
-- [Contributing](#contributing)
-- [License](#license)
-- [Community](#community)
+## ✨ Features
 
-## Features
+- **🛍️ Comprehensive Product Management** - Search, retrieve, and manage product data
+- **👥 Customer Data Access** - Get customer information and manage tags
+- **📦 Advanced Order Processing** - Filter, sort, and manage orders easily
+- **⚡ Direct GraphQL Integration** - Connect directly to Shopify's Admin API
+- **🛡️ Robust Error Handling** - Clear feedback for troubleshooting
 
-* **Product Management**: Search and retrieve product information
-* **Customer Management**: Load customer data and manage customer tags
-* **Order Management**: Advanced order querying and filtering
-* **GraphQL Integration**: Direct integration with Shopify's GraphQL Admin API
-* **Comprehensive Error Handling**: Clear error messages for API and authentication issues
+## 🧰 Available Tools
 
-## Tools
+### Product Management
 
-1. `get-products`
-   * Get all products or search by title
-   * Inputs:
-     * `searchTitle` (optional string): Filter products by title
-     * `limit` (number): Maximum number of products to return
-   * Returns: Formatted product details including title, description, handle, and variants
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get-products` | Find products by title | `searchTitle`, `limit` |
+| `get-products-by-collection` | Get collection products | `collectionId`, `limit` |
+| `get-products-by-ids` | Retrieve specific products | `productIds` |
+| `get-variants-by-ids` | Get variant details | `variantIds` |
 
-2. `get-products-by-collection`
-   * Get products from a specific collection
-   * Inputs:
-     * `collectionId` (string): ID of the collection to get products from
-     * `limit` (optional number, default: 10): Maximum number of products to return
-   * Returns: Formatted product details from the specified collection
+### Customer Management
 
-3. `get-products-by-ids`
-   * Get products by their IDs
-   * Inputs:
-     * `productIds` (array of strings): Array of product IDs to retrieve
-   * Returns: Formatted product details for the specified products
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get-customers` | Retrieve customer data | `limit`, `next` |
+| `tag-customer` | Add tags to customers | `customerId`, `tags` |
 
-4. `get-variants-by-ids`
-   * Get product variants by their IDs
-   * Inputs:
-     * `variantIds` (array of strings): Array of variant IDs to retrieve
-   * Returns: Detailed variant information including product details
+### Order Management
 
-5. `get-customers`
-   * Get shopify customers with pagination support
-   * Inputs:
-     * `limit` (optional number): Maximum number of customers to return
-     * `next` (optional string): Next page cursor
-   * Returns: Customer data in JSON format
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get-orders` | Filter and sort orders | `first`, `after`, `query`, `sortKey` |
+| `get-order` | Get single order details | `orderId` |
 
-6. `tag-customer`
-   * Add tags to a customer
-   * Inputs:
-     * `customerId` (string): Customer ID to tag
-     * `tags` (array of strings): Tags to add to the customer
-   * Returns: Success or failure message
+### Shop & Collection Tools
 
-7. `get-orders`
-   * Get orders with advanced filtering and sorting
-   * Inputs:
-     * `first` (optional number): Limit of orders to return
-     * `after` (optional string): Next page cursor
-     * `query` (optional string): Filter orders using query syntax
-     * `sortKey` (optional enum): Field to sort by ('PROCESSED_AT', 'TOTAL_PRICE', 'ID', 'CREATED_AT', 'UPDATED_AT', 'ORDER_NUMBER')
-     * `reverse` (optional boolean): Reverse sort order
-   * Returns: Formatted order details
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get-collections` | Retrieve shop collections | `limit`, `name` |
+| `get-shop` | Get basic shop details | None |
+| `get-shop-details` | Get extended shop info | None |
 
-8. `get-order`
-   * Get a single order by ID
-   * Inputs:
-     * `orderId` (string): ID of the order to retrieve
-   * Returns: Detailed order information
+### Discount Management
 
-9. `create-discount`
-   * Create a basic discount code
-   * Inputs:
-     * `title` (string): Title of the discount
-     * `code` (string): Discount code that customers will enter
-     * `valueType` (enum): Type of discount ('percentage' or 'fixed_amount')
-     * `value` (number): Discount value (percentage as decimal or fixed amount)
-     * `startsAt` (string): Start date in ISO format
-     * `endsAt` (optional string): Optional end date in ISO format
-     * `appliesOncePerCustomer` (boolean): Whether discount can be used only once per customer
-   * Returns: Created discount details
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `create-discount` | Create discount codes | `title`, `code`, `valueType`, `value` |
 
-10. `create-draft-order`
-    * Create a draft order
-    * Inputs:
-      * `lineItems` (array): Array of items with variantId and quantity
-      * `email` (string): Customer email
-      * `shippingAddress` (object): Shipping address details
-      * `note` (optional string): Optional note for the order
-    * Returns: Created draft order details
+## 🏁 Getting Started
 
-11. `complete-draft-order`
-    * Complete a draft order
-    * Inputs:
-      * `draftOrderId` (string): ID of the draft order to complete
-      * `variantId` (string): ID of the variant in the draft order
-    * Returns: Completed order details
+1. **Install the package**
+   ```bash
+   npm install shopify-mcp-server
+   ```
 
-12. `get-collections`
-    * Get all collections
-    * Inputs:
-      * `limit` (optional number, default: 10): Maximum number of collections to return
-      * `name` (optional string): Filter collections by name
-    * Returns: Collection details
+2. **Set up environment variables**
+   ```
+   SHOPIFY_ACCESS_TOKEN=your_token
+   MYSHOPIFY_DOMAIN=your-store.myshopify.com
+   ```
 
-13. `get-shop`
-    * Get shop details
-    * Inputs: None
-    * Returns: Basic shop information
+3. **Initialize the server**
+   ```javascript
+   require('shopify-mcp-server').start();
+   ```
 
-14. `get-shop-details`
-    * Get extended shop details including shipping countries
-    * Inputs: None
-    * Returns: Extended shop information including shipping countries
+4. **Make your first API call**
+   ```javascript
+   const products = await shopifyMcpServer.tools.getProducts({ limit: 10 });
+   console.log(products);
+   ```
 
-15. `manage-webhook`
-    * Subscribe, find, or unsubscribe webhooks
-    * Inputs:
-      * `action` (enum): Action to perform ('subscribe', 'find', 'unsubscribe')
-      * `callbackUrl` (string): Webhook callback URL
-      * `topic` (enum): Webhook topic to subscribe to
-      * `webhookId` (optional string): Webhook ID (required for unsubscribe)
-    * Returns: Webhook details or success message
+## 💡 Use Cases
 
-## Getting Started
+- **E-commerce Platform Integration** - Sync products and orders between systems
+- **Custom Admin Dashboards** - Build tailored interfaces for your business needs
+- **Order Automation** - Set up workflows for automatic order processing
+- **Multi-channel Sales Management** - Manage inventory across all sales channels
 
-To get started with the Shopify MCP Server, follow these steps:
+## 🔧 Setup Guide
 
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/shopify-mcp-server.git
-```
-2. Navigate to the project directory:
-```bash
-cd shopify-mcp-server
-```
-3. Install dependencies:
-```bash
-npm install
-```
-4. Create a `.env` file with your Shopify credentials:
-```
-SHOPIFY_ACCESS_TOKEN=your_access_token
-MYSHOPIFY_DOMAIN=your-store.myshopify.com
-```
-5. Build the project:
-```bash
-npm run build
-```
-6. Run the server:
-```bash
-npm start
-```
-
-## Use Cases
-
-### Example 1: Managing Products
-
-With the Shopify MCP Server, you can easily manage your products. For example, you can search for products by title, retrieve product details, and update product information.
-
-### Example 2: Handling Orders
-
-The server provides advanced order querying and filtering capabilities. You can retrieve orders based on various criteria, such as order status, date range, and customer information.
-
-
-## Setup
-
-### Shopify Access Token
-
-To use this MCP server, you'll need to create a custom app in your Shopify store:
+### Getting a Shopify Access Token
 
 1. From your Shopify admin, go to **Settings** > **Apps and sales channels**
-2. Click **Develop apps** (you may need to enable developer preview first)
-3. Click **Create an app**
-4. Set a name for your app (e.g., "Shopify MCP Server")
-5. Click **Configure Admin API scopes**
-6. Select the following scopes:
-   * `read_products`, `write_products`
-   * `read_customers`, `write_customers`
-   * `read_orders`, `write_orders`
-7. Click **Save**
-8. Click **Install app**
-9. Click **Install** to give the app access to your store data
-10. After installation, you'll see your **Admin API access token**
-11. Copy this token - you'll need it for configuration
+2. Click **Develop apps** > **Create an app**
+3. Name your app (e.g., "Shopify MCP Server")
+4. Configure API scopes:
+   - `read_products`, `write_products`
+   - `read_customers`, `write_customers`
+   - `read_orders`, `write_orders`
+5. Click **Save** and **Install app**
+6. Copy your **Admin API access token**
 
-Note: Store your access token securely. It provides access to your store data and should never be shared or committed to version control.
-More details on how to create a Shopify app can be found [here](https://help.shopify.com/en/manual/apps/app-types/custom-apps).
+> **Security Note:** Store your access token securely. Never commit it to version control.
 
-### Usage with Claude Desktop
+### Using with Claude Desktop
 
 Add to your `claude_desktop_config.json`:
 
@@ -224,56 +139,43 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": ["-y", "shopify-mcp-server"],
       "env": {
-        "SHOPIFY_ACCESS_TOKEN": "<YOUR_ACCESS_TOKEN>",
-        "MYSHOPIFY_DOMAIN": "<YOUR_SHOP>.myshopify.com"
+        "SHOPIFY_ACCESS_TOKEN": "<TOKEN>",
+        "MYSHOPIFY_DOMAIN": "<SHOP>.myshopify.com"
       }
     }
   }
 }
 ```
 
-## Development
+## 👨‍💻 Development
 
-1. Clone the repository
-2. Install dependencies:
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/shopify-mcp-server.git
+
+# Install dependencies
+cd shopify-mcp-server
 npm install
-```
-3. Create a `.env` file:
-```
-SHOPIFY_ACCESS_TOKEN=your_access_token
-MYSHOPIFY_DOMAIN=your-store.myshopify.com
-```
-4. Build the project:
-```bash
+
+# Set up environment variables
+# Create a .env file with your Shopify credentials
+
+# Build and test
 npm run build
-```
-5. Run tests:
-```bash
 npm test
 ```
 
-## Dependencies
+## 🤝 Community
 
-- @modelcontextprotocol/sdk - MCP protocol implementation
-- graphql-request - GraphQL client for Shopify API
-- zod - Runtime type validation
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
-
-## License
-
-MIT
-
-## Community
-
-- [MCP GitHub Discussions](https://github.com/modelcontextprotocol/servers/discussions)
-- [Report Issues](https://github.com/rezapex/shopify-mcp-server/issues)
+| Resource | Link |
+|----------|------|
+| GitHub Discussions | [Join the conversation](https://github.com/modelcontextprotocol/servers/discussions) |
+| Issue Tracker | [Report bugs](https://github.com/rezapex/shopify-mcp-server/issues) |
+| Twitter | [@rezajafar](https://twitter.com/rezajafar) |
+| Discord | [Join our server](https://discord.gg/kR2DFxV8) |
 
 ---
 
-Built with ❤️ using the [Model Context Protocol](https://modelcontextprotocol.io) 
-
-For more information, visit [my website](https://rezajafar.com).
+<div align="center">
+  <p>Built with ❤️ using the <a href="https://modelcontextprotocol.io">Model Context Protocol</a></p>
+</div> 
