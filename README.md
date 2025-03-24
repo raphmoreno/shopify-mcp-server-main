@@ -8,7 +8,7 @@
 
 MCP Server for [Shopify Admin API](https://shopify.dev/docs/api/admin-graphql), enabling interaction with store data through GraphQL API. This server provides tools for managing products, customers, orders, and more.
 
-<a href="https://glama.ai/mcp/servers/bemvhpy885"><img width="380" height="200" src="https://glama.ai/mcp/servers/bemvhpy885/badge" alt="Shopify Server MCP server" /></a>
+<a href="https://glama.ai/mcp/servers/rezapex"><img width="380" height="200" src="https://glama.ai/mcp/servers/rezapex/badge" alt="Shopify Server MCP server" /></a>
 
 ## Table of Contents
 
@@ -185,12 +185,6 @@ With the Shopify MCP Server, you can easily manage your products. For example, y
 
 The server provides advanced order querying and filtering capabilities. You can retrieve orders based on various criteria, such as order status, date range, and customer information.
 
-## Testimonials
-
-> "The Shopify MCP Server has greatly simplified our product management process. It's a powerful tool that saves us a lot of time." - John Doe, Store Owner
-
-> "We love the advanced order filtering options. It makes it so much easier to find specific orders and manage our store efficiently." - Jane Smith, E-commerce Manager
-
 
 ## Setup
 
@@ -273,7 +267,7 @@ MIT
 ## Community
 
 - [MCP GitHub Discussions](https://github.com/modelcontextprotocol/servers/discussions)
-- [Report Issues](https://github.com/your-username/shopify-mcp-server/issues)
+- [Report Issues](https://github.com/rezapex/shopify-mcp-server/issues)
 
 ---
 
