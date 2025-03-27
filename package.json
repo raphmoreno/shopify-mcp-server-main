@@ -1,7 +1,8 @@
 {
   "name": "shopify-mcp-server-phytocea",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "npm test -- --watch",
@@ -12,7 +13,7 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production') { require('husky').install() }\"",
+    "prepare": "npm run build && if (process.env.NODE_ENV !== 'production') { require('husky').install() }",
     "check-types": "tsc --noEmit"
   },
   "keywords": [
@@ -49,7 +50,8 @@
   },
   "type": "module",
   "files": [
-    "build"
+    "build",
+    "README.md"
   ],
   "bin": {
     "shopify-mcp-server-phytocea": "./build/index.js"
@@ -59,5 +61,8 @@
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
