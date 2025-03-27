@@ -31,13 +31,13 @@ export function registerShopTools(server: McpServer): void {
         .describe("Maximum number of collections to return"),
       name: z.string().optional().describe("Filter collections by name"),
     },
-    async ({ limit, name }: GetCollectionsInput) => {
+    async ({ limit = 10, name }: GetCollectionsInput) => {
       const client = new ShopifyClient();
       try {
         const collections = await client.loadCollections(
           config.accessToken,
           config.shopDomain,
-          { limit, name }
+          { limit, query: name }
         );
         return formatSuccess(collections);
       } catch (error) {
@@ -54,7 +54,7 @@ export function registerShopTools(server: McpServer): void {
     async () => {
       const client = new ShopifyClient();
       try {
-        const shop = await client.loadShop(
+        const shop = await client.loadShopDetails(
           config.accessToken,
           config.shopDomain
         );
@@ -73,7 +73,7 @@ export function registerShopTools(server: McpServer): void {
     async () => {
       const client = new ShopifyClient();
       try {
-        const shopDetails = await client.loadShopDetail(
+        const shopDetails = await client.loadShopDetails(
           config.accessToken,
           config.shopDomain
         );

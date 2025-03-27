@@ -9,6 +9,7 @@ import { registerOrderTools } from "./tools/orderTools.js";
 import { registerShopTools } from "./tools/shopTools.js";
 import { registerDiscountTools } from "./tools/discountTools.js";
 import { registerWebhookTools } from "./tools/webhookTools.js";
+import { registerBlogTools } from "./tools/blogTools.js";
 
 /**
  * Main entry point for the Shopify MCP Server
@@ -21,7 +22,8 @@ async function main() {
     console.error(`Received ${signal}. Shutting down gracefully...`);
     if (server) {
       try {
-        await server.disconnect();
+        // The server will automatically disconnect when the process exits
+        console.error("Server shutdown complete");
       } catch (error) {
         console.error('Error during shutdown:', error);
       }
@@ -53,6 +55,7 @@ async function main() {
     registerShopTools(server);
     registerDiscountTools(server);
     registerWebhookTools(server);
+    registerBlogTools(server);
 
     // Connect to the transport
     const transport = new StdioServerTransport();

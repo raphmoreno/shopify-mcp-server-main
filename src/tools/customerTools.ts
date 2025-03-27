@@ -59,33 +59,21 @@ export function registerCustomerTools(server: McpServer): void {
     async ({ customerId, tags }: TagCustomerInput) => {
       const client = new ShopifyClient();
       try {
-        const success = await client.tagCustomer(
+        await client.tagCustomer(
           config.accessToken,
           config.shopDomain,
-          tags,
-          customerId
+          customerId,
+          tags
         );
         
-        if (success) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Successfully tagged customer ${customerId} with tags: ${tags.join(", ")}`,
-              },
-            ],
-          };
-        } else {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Failed to tag customer ${customerId}`,
-              },
-            ],
-            isError: true,
-          };
-        }
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully tagged customer ${customerId} with tags: ${tags.join(", ")}`,
+            },
+          ],
+        };
       } catch (error) {
         return handleError(`Failed to tag customer ${customerId}`, error);
       }

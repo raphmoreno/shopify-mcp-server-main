@@ -3,6 +3,8 @@
  * Centralizes all configuration options and provides validation
  */
 
+import 'dotenv/config';
+
 // No need to import process as it's a global in Node.js
 
 // Default Shopify API version - can be overridden with environment variable

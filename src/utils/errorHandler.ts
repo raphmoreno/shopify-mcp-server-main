@@ -8,8 +8,13 @@ import { CustomError } from "../ShopifyClient/ShopifyClientPort.js";
  * Standard error response format for MCP tools
  */
 export interface ErrorResponse {
-  content: { type: "text"; text: string }[];
+  content: Array<{
+    type: "text";
+    text: string;
+    [key: string]: unknown;
+  }>;
   isError: boolean;
+  [key: string]: unknown;
 }
 
 /**

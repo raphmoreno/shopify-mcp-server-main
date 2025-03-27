@@ -570,6 +570,46 @@ export type ShopifyWebhook = {
   topic: ShopifyWebhookTopic;
 };
 
+// Blog types
+export type BlogArticle = {
+  id: string;
+  title: string;
+  author: string;
+  body_html: string;
+  published_at: string;
+  tags: string[];
+  status: "draft" | "published";
+  image?: {
+    src: string;
+    alt?: string;
+  };
+};
+
+export type LoadBlogArticlesResponse = {
+  articles: BlogArticle[];
+  next?: string;
+};
+
+export type LoadBlogArticleResponse = {
+  article: BlogArticle;
+};
+
+export type CreateBlogArticleResponse = {
+  article: {
+    id: string;
+    title: string;
+    status: string;
+  };
+};
+
+export type UpdateBlogArticleResponse = {
+  article: {
+    id: string;
+    title: string;
+    status: string;
+  };
+};
+
 // The main client interface
 export interface ShopifyClientPort {
   searchProductsByPriceRange(
@@ -780,4 +820,61 @@ export interface ShopifyClientPort {
       tags?: string[];
     }>
   ): Promise<ProductNode[]>;
+
+  loadBlogArticles(
+    accessToken: string,
+    myshopifyDomain: string,
+    options: {
+      limit?: number;
+      status?: "draft" | "published";
+      tag?: string;
+    }
+  ): Promise<LoadBlogArticlesResponse>;
+
+  loadBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string
+  ): Promise<LoadBlogArticleResponse>;
+
+  createBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    article: {
+      title: string;
+      author: string;
+      body_html: string;
+      published_at?: string;
+      tags?: string[];
+      image?: {
+        src: string;
+        alt?: string;
+      };
+      status?: "draft" | "published";
+    }
+  ): Promise<CreateBlogArticleResponse>;
+
+  updateBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string,
+    updates: {
+      title?: string;
+      author?: string;
+      body_html?: string;
+      published_at?: string;
+      tags?: string[];
+      image?: {
+        src: string;
+        alt?: string;
+      };
+      status?: "draft" | "published";
+    }
+  ): Promise<UpdateBlogArticleResponse>;
+
+  deleteBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string
+  ): Promise<void>;
 }

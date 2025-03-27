@@ -1,3 +1,8 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { ShopifyClient } from "../ShopifyClient/ShopifyClient.js";
+import { config } from "../config/index.js";
+import { handleError, formatSuccess } from "../utils/errorHandler.js";
 import { ProductVariant, ShopifyClientPort, ProductNode } from "../ShopifyClient/ShopifyClientPort.js";
 
 export async function getVariantPrice(
@@ -47,7 +52,7 @@ export async function getProductFullDetails(
     myshopifyDomain,
     null,
     1,
-    null
+    undefined
   );
 
   const product = response.products.find((p: ProductNode) => p.id === productId);
@@ -231,4 +236,94 @@ export async function generateProductReport(
       })
     }))
   };
+}
+
+/**
+ * Registers product-related tools with the MCP server
+ * @param server The MCP server instance
+ */
+export function registerProductTools(server: McpServer): void {
+  // Get Product Details Tool
+  server.tool(
+    "get-product-details",
+    "Get detailed information about a product",
+    {
+      productId: z.string().describe("ID of the product to retrieve"),
+    },
+    async ({ productId }) => {
+      const client = new ShopifyClient();
+      try {
+        const details = await getProductFullDetails(
+          client,
+          config.accessToken,
+          config.shopDomain,
+          productId
+        );
+        return formatSuccess(details);
+      } catch (error) {
+        return handleError("Failed to retrieve product details", error);
+      }
+    }
+  );
+
+  // Search Products Tool
+  server.tool(
+    "search-products",
+    "Search products by various attributes",
+    {
+      title: z.string().optional().describe("Product title to search for"),
+      minPrice: z.number().optional().describe("Minimum price"),
+      maxPrice: z.number().optional().describe("Maximum price"),
+      collection: z.string().optional().describe("Collection ID to search in"),
+    },
+    async ({ title, minPrice, maxPrice, collection }) => {
+      const client = new ShopifyClient();
+      try {
+        const products = await searchProductsByAttributes(
+          client,
+          config.accessToken,
+          config.shopDomain,
+          {
+            title,
+            priceRange: minPrice && maxPrice ? { min: minPrice, max: maxPrice } : undefined,
+            collection,
+          }
+        );
+        return formatSuccess(products);
+      } catch (error) {
+        return handleError("Failed to search products", error);
+      }
+    }
+  );
+
+  // Get Product Analytics Tool
+  server.tool(
+    "get-product-analytics",
+    "Get analytics data for a product",
+    {
+      productId: z.string().describe("ID of the product to get analytics for"),
+      startDate: z.string().optional().describe("Start date for analytics (ISO format)"),
+      endDate: z.string().optional().describe("End date for analytics (ISO format)"),
+    },
+    async ({ productId, startDate, endDate }) => {
+      const client = new ShopifyClient();
+      try {
+        const analytics = await getProductAnalytics(
+          client,
+          config.accessToken,
+          config.shopDomain,
+          productId,
+          startDate && endDate
+            ? {
+                start: new Date(startDate),
+                end: new Date(endDate),
+              }
+            : undefined
+        );
+        return formatSuccess(analytics);
+      } catch (error) {
+        return handleError("Failed to retrieve product analytics", error);
+      }
+    }
+  );
 }

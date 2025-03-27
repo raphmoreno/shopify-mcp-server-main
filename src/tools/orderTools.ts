@@ -8,6 +8,7 @@ import { ShopifyClient } from "../ShopifyClient/ShopifyClient.js";
 import { config } from "../config/index.js";
 import { handleError } from "../utils/errorHandler.js";
 import { formatOrder } from "../utils/formatters.js";
+import { CreateDraftOrderPayload, DraftOrderResponse } from "../ShopifyClient/ShopifyClientPort.js";
 
 // Define input types for better type safety
 interface GetOrdersInput {
@@ -19,26 +20,24 @@ interface GetOrdersInput {
 }
 
 interface GetOrderInput {
-  orderId: string;
+  id: string;
 }
 
 interface CreateDraftOrderInput {
+  email: string;
   lineItems: Array<{
     variantId: string;
     quantity: number;
   }>;
-  email: string;
-  shippingAddress: {
+  shippingAddress?: {
     address1: string;
     address2?: string;
-    countryCode: string;
+    city: string;
+    province: string;
+    country: string;
+    zip: string;
     firstName: string;
     lastName: string;
-    zip: string;
-    city: string;
-    country: string;
-    province?: string;
-    provinceCode?: string;
     phone?: string;
   };
   note?: string;
@@ -57,16 +56,29 @@ export function registerOrderTools(server: McpServer): void {
   // Get Orders Tool
   server.tool(
     "get-orders",
-    "Get orders with advanced filtering and sorting",
+    "Get all orders",
     {
-      first: z.number().optional().describe("Limit of orders to return"),
-      after: z.string().optional().describe("Next page cursor"),
-      query: z.string().optional().describe("Filter orders using query syntax"),
+      first: z
+        .number()
+        .optional()
+        .default(10)
+        .describe("Maximum number of orders to return"),
+      after: z
+        .string()
+        .optional()
+        .describe("Cursor for pagination"),
+      query: z
+        .string()
+        .optional()
+        .describe("Search query for filtering orders"),
       sortKey: z
         .enum(["PROCESSED_AT", "TOTAL_PRICE", "ID", "CREATED_AT", "UPDATED_AT", "ORDER_NUMBER"])
         .optional()
-        .describe("Field to sort by"),
-      reverse: z.boolean().optional().describe("Reverse sort order"),
+        .describe("Field to sort orders by"),
+      reverse: z
+        .boolean()
+        .optional()
+        .describe("Whether to sort in reverse order"),
     },
     async ({ first, after, query, sortKey, reverse }: GetOrdersInput) => {
       const client = new ShopifyClient();
@@ -74,26 +86,13 @@ export function registerOrderTools(server: McpServer): void {
         const orders = await client.loadOrders(
           config.accessToken,
           config.shopDomain,
-          {
-            first,
-            after,
-            query,
-            sortKey,
-            reverse,
-          }
+          { first, after, query, sortKey, reverse }
         );
-        
-        const formattedOrders = orders.orders.map(formatOrder).join("\n");
-        
         return {
           content: [
             {
               type: "text",
-              text: `Found ${orders.orders.length} orders:\n${formattedOrders}\n\nPagination Info: ${
-                orders.pageInfo.hasNextPage
-                  ? `More orders available. Use 'after: "${orders.pageInfo.endCursor}"' to get the next page.`
-                  : "No more orders available."
-              }`,
+              text: JSON.stringify(orders, null, 2),
             },
           ],
         };
@@ -106,29 +105,40 @@ export function registerOrderTools(server: McpServer): void {
   // Get Order Tool
   server.tool(
     "get-order",
-    "Get a single order by ID",
+    "Get a specific order by ID",
     {
-      orderId: z.string().describe("ID of the order to retrieve"),
+      id: z.string().describe("Order ID"),
     },
-    async ({ orderId }: GetOrderInput) => {
+    async ({ id }: GetOrderInput) => {
       const client = new ShopifyClient();
       try {
-        const order = await client.loadOrder(
+        const order = await client.loadOrders(
           config.accessToken,
           config.shopDomain,
-          { orderId }
+          { query: `id:${id}` }
         );
         
+        if (!order.orders.length) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Order with ID ${id} not found`,
+              },
+            ],
+          };
+        }
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(order, null, 2),
+              text: JSON.stringify(order.orders[0], null, 2),
             },
           ],
         };
       } catch (error) {
-        return handleError(`Failed to retrieve order ${orderId}`, error);
+        return handleError("Failed to retrieve order", error);
       }
     }
   );
@@ -138,44 +148,76 @@ export function registerOrderTools(server: McpServer): void {
     "create-draft-order",
     "Create a draft order",
     {
-      lineItems: z.array(
-        z.object({
-          variantId: z.string().describe("ID of the variant"),
-          quantity: z.number().describe("Quantity of the variant"),
+      email: z.string().email().describe("Customer email"),
+      lineItems: z
+        .array(
+          z.object({
+            variantId: z.string().describe("Product variant ID"),
+            quantity: z.number().min(1).describe("Quantity of items"),
+          })
+        )
+        .describe("Order line items"),
+      shippingAddress: z
+        .object({
+          address1: z.string().describe("Street address"),
+          address2: z.string().optional().describe("Apartment, suite, etc."),
+          city: z.string().describe("City"),
+          province: z.string().describe("State/Province"),
+          country: z.string().describe("Country"),
+          zip: z.string().describe("ZIP/Postal code"),
+          firstName: z.string().describe("First name"),
+          lastName: z.string().describe("Last name"),
+          phone: z.string().optional().describe("Phone number"),
         })
-      ).describe("Array of items with variantId and quantity"),
-      email: z.string().describe("Customer email"),
-      shippingAddress: z.object({
-        address1: z.string().describe("Address line 1"),
-        address2: z.string().optional().describe("Address line 2"),
-        countryCode: z.string().describe("Country code (e.g., US, CA)"),
-        firstName: z.string().describe("First name"),
-        lastName: z.string().describe("Last name"),
-        zip: z.string().describe("ZIP/Postal code"),
-        city: z.string().describe("City"),
-        country: z.string().describe("Country name"),
-        province: z.string().optional().describe("Province/State name"),
-        provinceCode: z.string().optional().describe("Province/State code"),
-        phone: z.string().optional().describe("Phone number"),
-      }).describe("Shipping address details"),
-      note: z.string().optional().describe("Optional note for the order"),
+        .optional()
+        .describe("Shipping address"),
+      note: z.string().optional().describe("Order note"),
     },
-    async ({ lineItems, email, shippingAddress, note }: CreateDraftOrderInput) => {
+    async ({ email, lineItems, shippingAddress, note }: CreateDraftOrderInput) => {
       const client = new ShopifyClient();
       try {
+        const draftOrderData: CreateDraftOrderPayload = {
+          email,
+          lineItems,
+          shippingAddress: shippingAddress ? {
+            ...shippingAddress,
+            countryCode: shippingAddress.country,
+            provinceCode: shippingAddress.province,
+          } : {
+            address1: "",
+            city: "",
+            province: "",
+            country: "",
+            zip: "",
+            firstName: "",
+            lastName: "",
+            countryCode: "",
+          },
+          billingAddress: shippingAddress ? {
+            ...shippingAddress,
+            countryCode: shippingAddress.country,
+            provinceCode: shippingAddress.province,
+          } : {
+            address1: "",
+            city: "",
+            province: "",
+            country: "",
+            zip: "",
+            firstName: "",
+            lastName: "",
+            countryCode: "",
+          },
+          tags: "",
+          note: note || "",
+        };
+
         const draftOrder = await client.createDraftOrder(
           config.accessToken,
           config.shopDomain,
-          {
-            lineItems,
-            email,
-            shippingAddress,
-            billingAddress: shippingAddress, // Use shipping address as billing address
-            tags: "",
-            note: note || "",
-          }
+          draftOrderData,
+          `draft_order_${Date.now()}` // Generate a unique idempotency key
         );
-        
+
         return {
           content: [
             {

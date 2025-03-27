@@ -17,6 +17,16 @@ interface ManageWebhookInput {
   webhookId?: string;
 }
 
+interface ToolResponse {
+  content: Array<{
+    type: "text";
+    text: string;
+    [key: string]: unknown;
+  }>;
+  isError?: boolean;
+  [key: string]: unknown;
+}
+
 /**
  * Registers webhook-related tools with the MCP server
  * @param server The MCP server instance
@@ -39,7 +49,7 @@ export function registerWebhookTools(server: McpServer): void {
         .optional()
         .describe("Webhook ID (required for unsubscribe)"),
     },
-    async ({ action, callbackUrl, topic, webhookId }: ManageWebhookInput) => {
+    async ({ action, callbackUrl, topic, webhookId }: ManageWebhookInput): Promise<ToolResponse> => {
       const client = new ShopifyClient();
       try {
         if (action === "subscribe") {

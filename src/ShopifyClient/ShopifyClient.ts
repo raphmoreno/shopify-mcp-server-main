@@ -19,6 +19,10 @@ import {
   getGraphqlShopifyError,
   getGraphqlShopifyUserError,
   getHttpShopifyError,
+  LoadBlogArticlesResponse,
+  LoadBlogArticleResponse,
+  CreateBlogArticleResponse,
+  UpdateBlogArticleResponse
 } from "./ShopifyClientPort.js";
 import { gql } from "graphql-request";
 
@@ -1039,5 +1043,508 @@ export class ShopifyClient implements ShopifyClientPort {
   getIdFromGid(gid: string): string {
     const parts = gid.split('/');
     return parts[parts.length - 1];
+  }
+
+  async subscribeWebhook(
+    accessToken: string,
+    shop: string,
+    callbackUrl: string,
+    topic: ShopifyWebhookTopic
+  ): Promise<{ id: string; topic: string; callbackUrl: string }> {
+    const mutation = gql`
+      mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
+        webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+          webhookSubscription {
+            id
+            topic
+            callbackUrl
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, shop, {
+      query: mutation,
+      variables: {
+        topic,
+        webhookSubscription: {
+          callbackUrl,
+        },
+      },
+    });
+
+    if (response.data.webhookSubscriptionCreate.userErrors?.length > 0) {
+      throw getGraphqlShopifyUserError(
+        response.data.webhookSubscriptionCreate.userErrors,
+        { topic, callbackUrl }
+      );
+    }
+
+    return response.data.webhookSubscriptionCreate.webhookSubscription;
+  }
+
+  async findWebhookByTopicAndCallbackUrl(
+    accessToken: string,
+    shop: string,
+    callbackUrl: string,
+    topic: ShopifyWebhookTopic
+  ): Promise<{ id: string; topic: string; callbackUrl: string } | null> {
+    const query = gql`
+      query getWebhooks($first: Int!) {
+        webhookSubscriptions(first: $first) {
+          edges {
+            node {
+              id
+              topic
+              callbackUrl
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, shop, {
+      query,
+      variables: {
+        first: 100, // Adjust this number based on your needs
+      },
+    });
+
+    const webhooks = response.data.webhookSubscriptions.edges;
+    return webhooks.find(
+      (edge: any) => edge.node.topic === topic && edge.node.callbackUrl === callbackUrl
+    )?.node || null;
+  }
+
+  async unsubscribeWebhook(
+    accessToken: string,
+    shop: string,
+    webhookId: string
+  ): Promise<void> {
+    const mutation = gql`
+      mutation webhookSubscriptionDelete($id: ID!) {
+        webhookSubscriptionDelete(id: $id) {
+          deletedWebhookSubscriptionId
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, shop, {
+      query: mutation,
+      variables: {
+        id: `gid://shopify/WebhookSubscription/${webhookId}`,
+      },
+    });
+
+    if (response.data.webhookSubscriptionDelete.userErrors?.length > 0) {
+      throw getGraphqlShopifyUserError(
+        response.data.webhookSubscriptionDelete.userErrors,
+        { webhookId }
+      );
+    }
+  }
+
+  async loadShopDetails(
+    accessToken: string,
+    shop: string
+  ): Promise<{
+    id: string;
+    name: string;
+    email: string;
+    myshopifyDomain: string;
+    plan: {
+      displayName: string;
+      partnerDevelopment: boolean;
+      shopifyPlus: boolean;
+    };
+    ianaTimezone: string;
+    currencyCode: string;
+    weightUnit: string;
+    billingAddress: {
+      address1: string;
+      address2: string;
+      city: string;
+      zip: string;
+      country: string;
+      countryCode: string;
+      province: string;
+      provinceCode: string;
+      phone: string;
+    };
+    primaryDomain: {
+      url: string;
+      host: string;
+    };
+    shippingCountries: Array<{
+      code: string;
+      name: string;
+    }>;
+  }> {
+    const query = gql`
+      query getShopDetails {
+        shop {
+          id
+          name
+          email
+          myshopifyDomain
+          plan {
+            displayName
+            partnerDevelopment
+            shopifyPlus
+          }
+          ianaTimezone
+          currencyCode
+          weightUnit
+          billingAddress {
+            address1
+            address2
+            city
+            zip
+            country
+            countryCode
+            province
+            provinceCode
+            phone
+          }
+          primaryDomain {
+            url
+            host
+          }
+          shippingCountries {
+            code
+            name
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, shop, {
+      query,
+    });
+
+    return response.data.shop;
+  }
+
+  async tagCustomer(
+    accessToken: string,
+    shop: string,
+    customerId: string,
+    tags: string[]
+  ): Promise<void> {
+    const mutation = gql`
+      mutation customerUpdate($input: CustomerInput!) {
+        customerUpdate(input: $input) {
+          customer {
+            id
+            tags
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, shop, {
+      query: mutation,
+      variables: {
+        input: {
+          id: `gid://shopify/Customer/${customerId}`,
+          tags: tags.join(", "),
+        },
+      },
+    });
+
+    if (response.data.customerUpdate.userErrors?.length > 0) {
+      throw getGraphqlShopifyUserError(
+        response.data.customerUpdate.userErrors,
+        { customerId, tags }
+      );
+    }
+  }
+
+  async loadBlogArticles(
+    accessToken: string,
+    myshopifyDomain: string,
+    options: {
+      limit?: number;
+      status?: "draft" | "published";
+      tag?: string;
+    }
+  ): Promise<LoadBlogArticlesResponse> {
+    const query = gql`
+      query getBlogArticles($first: Int, $query: String) {
+        articles(first: $first, query: $query) {
+          edges {
+            node {
+              id
+              title
+              author {
+                name
+              }
+              bodyHtml
+              publishedAt
+              tags
+              status
+              image {
+                src
+                altText
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    `;
+
+    const queryString = [
+      options.status && `status:${options.status}`,
+      options.tag && `tag:${options.tag}`
+    ].filter(Boolean).join(" ");
+
+    const response = await this.graphqlRequest(accessToken, myshopifyDomain, {
+      query,
+      variables: {
+        first: options.limit || 10,
+        query: queryString
+      }
+    });
+
+    return {
+      articles: response.data.articles.edges.map((edge: any) => ({
+        id: this.getIdFromGid(edge.node.id),
+        title: edge.node.title,
+        author: edge.node.author.name,
+        body_html: edge.node.bodyHtml,
+        published_at: edge.node.publishedAt,
+        tags: edge.node.tags,
+        status: edge.node.status.toLowerCase(),
+        image: edge.node.image ? {
+          src: edge.node.image.src,
+          alt: edge.node.image.altText
+        } : undefined
+      })),
+      next: response.data.articles.pageInfo.hasNextPage ? 
+        response.data.articles.pageInfo.endCursor : undefined
+    };
+  }
+
+  async loadBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string
+  ): Promise<LoadBlogArticleResponse> {
+    const query = gql`
+      query getBlogArticle($id: ID!) {
+        article(id: $id) {
+          id
+          title
+          author {
+            name
+          }
+          bodyHtml
+          publishedAt
+          tags
+          status
+          image {
+            src
+            altText
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, myshopifyDomain, {
+      query,
+      variables: {
+        id: `gid://shopify/Article/${articleId}`
+      }
+    });
+
+    const article = response.data.article;
+    return {
+      article: {
+        id: this.getIdFromGid(article.id),
+        title: article.title,
+        author: article.author.name,
+        body_html: article.bodyHtml,
+        published_at: article.publishedAt,
+        tags: article.tags,
+        status: article.status.toLowerCase(),
+        image: article.image ? {
+          src: article.image.src,
+          alt: article.image.altText
+        } : undefined
+      }
+    };
+  }
+
+  async createBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    article: {
+      title: string;
+      author: string;
+      body_html: string;
+      published_at?: string;
+      tags?: string[];
+      image?: {
+        src: string;
+        alt?: string;
+      };
+      status?: "draft" | "published";
+    }
+  ): Promise<CreateBlogArticleResponse> {
+    const mutation = gql`
+      mutation createArticle($input: ArticleInput!) {
+        articleCreate(input: $input) {
+          article {
+            id
+            title
+            status
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, myshopifyDomain, {
+      query: mutation,
+      variables: {
+        input: {
+          title: article.title,
+          author: article.author,
+          bodyHtml: article.body_html,
+          publishedAt: article.published_at,
+          tags: article.tags,
+          image: article.image ? {
+            src: article.image.src,
+            altText: article.image.alt
+          } : undefined,
+          status: article.status?.toUpperCase()
+        }
+      }
+    });
+
+    if (response.data.articleCreate.userErrors.length > 0) {
+      throw getGraphqlShopifyUserError(response.data.articleCreate.userErrors);
+    }
+
+    return {
+      article: {
+        id: this.getIdFromGid(response.data.articleCreate.article.id),
+        title: response.data.articleCreate.article.title,
+        status: response.data.articleCreate.article.status.toLowerCase()
+      }
+    };
+  }
+
+  async updateBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string,
+    updates: {
+      title?: string;
+      author?: string;
+      body_html?: string;
+      published_at?: string;
+      tags?: string[];
+      image?: {
+        src: string;
+        alt?: string;
+      };
+      status?: "draft" | "published";
+    }
+  ): Promise<UpdateBlogArticleResponse> {
+    const mutation = gql`
+      mutation updateArticle($id: ID!, $input: ArticleInput!) {
+        articleUpdate(id: $id, input: $input) {
+          article {
+            id
+            title
+            status
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, myshopifyDomain, {
+      query: mutation,
+      variables: {
+        id: `gid://shopify/Article/${articleId}`,
+        input: {
+          title: updates.title,
+          author: updates.author,
+          bodyHtml: updates.body_html,
+          publishedAt: updates.published_at,
+          tags: updates.tags,
+          image: updates.image ? {
+            src: updates.image.src,
+            altText: updates.image.alt
+          } : undefined,
+          status: updates.status?.toUpperCase()
+        }
+      }
+    });
+
+    if (response.data.articleUpdate.userErrors.length > 0) {
+      throw getGraphqlShopifyUserError(response.data.articleUpdate.userErrors);
+    }
+
+    return {
+      article: {
+        id: this.getIdFromGid(response.data.articleUpdate.article.id),
+        title: response.data.articleUpdate.article.title,
+        status: response.data.articleUpdate.article.status.toLowerCase()
+      }
+    };
+  }
+
+  async deleteBlogArticle(
+    accessToken: string,
+    myshopifyDomain: string,
+    articleId: string
+  ): Promise<void> {
+    const mutation = gql`
+      mutation deleteArticle($id: ID!) {
+        articleDelete(id: $id) {
+          deletedArticleId
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await this.graphqlRequest(accessToken, myshopifyDomain, {
+      query: mutation,
+      variables: {
+        id: `gid://shopify/Article/${articleId}`
+      }
+    });
+
+    if (response.data.articleDelete.userErrors.length > 0) {
+      throw getGraphqlShopifyUserError(response.data.articleDelete.userErrors);
+    }
   }
 }

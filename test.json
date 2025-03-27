@@ -1,0 +1,8 @@
+{
+    "type": "request",
+    "id": "1",
+    "tool": "get_blog_articles",
+    "args": {
+      "limit": 10
+    }
+  }
