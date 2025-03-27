@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "npm test -- --watch",
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "npx tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "build:watch": "tsc --watch",
     "start": "node build/index.js",
     "dev": "tsc-watch --onSuccess \"node build/index.js\"",
@@ -31,6 +31,7 @@
     "@types/node": "^22.10.10",
     "dotenv": "^16.4.7",
     "graphql-request": "^7.1.2",
+    "typescript": "^5.7.3",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -45,8 +46,7 @@
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "ts-jest": "^29.2.5",
-    "tsc-watch": "^6.0.4",
-    "typescript": "^5.7.3"
+    "tsc-watch": "^6.0.4"
   },
   "type": "module",
   "files": [
