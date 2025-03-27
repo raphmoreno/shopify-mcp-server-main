@@ -52,7 +52,7 @@
     "build"
   ],
   "bin": {
-    "shopify-mcp-server": "./build/index.js"
+    "shopify-mcp-server-phytocea": "./build/index.js"
   },
   "lint-staged": {
     "*.ts": [
