@@ -89,6 +89,10 @@ interface GraphQLResponse {
   errors?: any[];
 }
 
+interface GraphQLErrorResponse {
+  errors: any[];
+}
+
 export class ShopifyClient implements ShopifyClientPort {
   async loadProductsByCollectionId(
     accessToken: string,
@@ -234,13 +238,17 @@ export class ShopifyClient implements ShopifyClientPort {
       throw getHttpShopifyError(await response.json(), response.status);
     }
 
-    const result = await response.json();
+    const result = await response.json() as unknown;
+
+    const hasErrors = (obj: unknown): obj is GraphQLErrorResponse => {
+      return typeof obj === 'object' && obj !== null && 'errors' in obj;
+    };
     
-    if (result.errors) {
+    if (hasErrors(result)) {
       throw getGraphqlShopifyError(result.errors, response.status);
     }
 
-    return result;
+    return result as GraphQLResponse;
   }
 
   async manageInventory(
