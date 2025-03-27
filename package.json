@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "npm test -- --watch",
-    "build": "npx tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "npm install && npx tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "build:watch": "tsc --watch",
     "start": "node build/index.js",
     "dev": "tsc-watch --onSuccess \"node build/index.js\"",
@@ -51,7 +51,8 @@
   "type": "module",
   "files": [
     "build",
-    "README.md"
+    "README.md",
+    "tsconfig.json"
   ],
   "bin": {
     "shopify-mcp-server-phytocea": "./build/index.js"
